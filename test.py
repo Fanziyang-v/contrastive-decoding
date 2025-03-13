@@ -136,8 +136,14 @@ def inference(args):
     outputs = tokenizer.batch_decode(output_ids, skip_special_tokens=True)[0].strip()
     print(outputs)
 
+fastv_config = {
+    "fastv_k": 2,
+    "fastv_r": 0.5,
+    "image_token_start_index": 35,
+    "image_token_length": 576
+}
 
-cd_config = ContrastiveDecodingConfig(strategy="VCD", alpha=1, beta=0.1, noise_step=499)
+cd_config = ContrastiveDecodingConfig(strategy="SID", alpha=1, beta=0.1, noise_step=499, fastv_config=fastv_config)
 model_path = "liuhaotian/llava-v1.5-7b"
 prompt = "What are the things I should be cautious about when I visit here?"
 image_file = "https://llava-vl.github.io/static/images/view.jpg"
@@ -154,7 +160,7 @@ args = type(
         "conv_mode": None,
         "image_file": image_file,
         "sep": ",",
-        "temperature": 0,
+        "temperature": 1.0,
         "top_p": None,
         "num_beams": 1,
         "max_new_tokens": 1024,

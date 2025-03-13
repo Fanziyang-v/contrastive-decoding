@@ -127,7 +127,21 @@ class DynamicCache(Cache):
             self.key_cache[layer_idx] = torch.cat([self.key_cache[layer_idx], key_states], dim=-2)
             self.value_cache[layer_idx] = torch.cat([self.value_cache[layer_idx], value_states], dim=-2)
 
-        return self.key_cache[layer_idx], self.value_cache[layer_idx]
+        cache_position: Optional[torch.LongTensor] = cache_kwargs.get("cache_position") if cache_kwargs is not None else None
+        if cache_position is None:
+            return self.key_cache[layer_idx], self.value_cache[layer_idx]
+
+        # if cache_position is provided, return the cached states at the specified position
+        _, n_heads, _, head_dim = key_states.shape
+        return torch.gather(
+            self.key_cache[layer_idx],
+            dim=-2,
+            index=cache_position.unsqueeze(-1).unsqueeze(-3).expand(-1, n_heads, -1, head_dim),
+        ), torch.gather(
+            self.value_cache[layer_idx],
+            dim=-2,
+            index=cache_position.unsqueeze(-1).unsqueeze(-3).expand(-1, n_heads, -1, head_dim),
+        )
 
     def get_seq_length(self, layer_idx: Optional[int] = 0) -> int:
         """Returns the sequence length of the cached states. A layer index can be optionally passed."""

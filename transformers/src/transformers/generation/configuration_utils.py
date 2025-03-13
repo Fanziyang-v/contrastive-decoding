@@ -982,6 +982,7 @@ class ContrastiveDecodingConfig:
         self.alpha = kwargs.pop("alpha", None)
         self.beta = kwargs.pop("beta", None)
         self.noise_step = kwargs.pop("noise_step", None)
+        self.fastv_config = kwargs.pop("fastv_config", None)
         # TODO: Add more parameters for contrastive decoding
 
     def _validate_cd_args(self):
