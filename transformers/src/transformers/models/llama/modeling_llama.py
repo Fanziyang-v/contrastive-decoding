@@ -1076,7 +1076,7 @@ class LlamaModel(LlamaPreTrainedModel):
             if fastv_k < 1 or fastv_k > self.config.num_hidden_layers:
                 raise AssertionError(f"`fastv_k` should be in the range of [1, {self.config.num_hidden_layers}].")
             # compute the number of tokens retaining after token pruning
-            n_tokens = int(image_token_length * fastv_r)
+            n_tokens = round(image_token_length * (1 - fastv_r))
             image_token_end_index = image_token_start_index + image_token_length
             device = input_ids.device if input_ids is not None else inputs_embeds.device
 
