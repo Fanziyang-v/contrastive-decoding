@@ -1057,7 +1057,7 @@ class LlamaModel(LlamaPreTrainedModel):
         # embed positions
         hidden_states = inputs_embeds
 
-        ## FastV implementation
+        ## FastV implementation for SELF-INTROSEPECTIVE DECODING
         # 1. validate and obtain FASTV configs
         use_fastv = fastv_config is not None
         if use_fastv:
@@ -1121,9 +1121,9 @@ class LlamaModel(LlamaPreTrainedModel):
                         attn = torch.mean(attn, dim=1)
                         # (4) Get vision token attentions, of shape (batch_size, image_token_length)
                         attn = attn[:, image_token_start_index:image_token_end_index]
-                        # (5) Get the indices of the most important vision tokens, of shape (batch_size, n_tokens)
+                        # (5) Get the indices of the least important vision tokens, of shape (batch_size, n_tokens)
                         indices = (
-                            torch.topk(attn, k=n_tokens, dim=-1).indices.sort().values
+                            torch.topk(attn, k=n_tokens, dim=-1, largest=False).indices.sort().values
                             + image_token_start_index
                         )
                         # (6) Combine the indices of system tokens and text tokens, of shape(batch_size, seq_length_with_past)

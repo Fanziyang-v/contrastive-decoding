@@ -388,14 +388,21 @@ class Llava(lmms):
                 strategy = gen_kwargs.pop("strategy", None)
                 alpha = gen_kwargs.pop("alpha", None)
                 beta = gen_kwargs.pop("beta", None)
-                noise_step = gen_kwargs.pop("noise_step", None)
-                gen_kwargs["contrastive_decoding_config"] = ContrastiveDecodingConfig(strategy=strategy, alpha=alpha, beta=beta, noise_step=noise_step)
+                gen_kwargs["contrastive_decoding_config"] = ContrastiveDecodingConfig(strategy=strategy, alpha=alpha, beta=beta)
                 if strategy == "VCD":
+                    noise_step = gen_kwargs.pop("noise_step", None)
                     from llava.utils import GaussianDiffusion
                     diffusion = GaussianDiffusion(device=self.device)
-                    noisy_images_tensor = diffusion(image_tensor, noise_step)
-                    noisy_images_tensor = noisy_images_tensor.to(self.device, dtype=torch.float16)
-                    gen_kwargs["noisy_images"] = noisy_images_tensor
+                    gen_kwargs["noisy_images"] = diffusion(image_tensor, noise_step)
+                    gen_kwargs["noise_step"] = noise_step
+                elif strategy == "SID":
+                    # prepare `fastv_config` for SID
+                    fastv_k = gen_kwargs.pop("fastv_k", None)
+                    fastv_r = gen_kwargs.pop("fastv_r", None)
+                    image_token_start_index = gen_kwargs.pop("image_token_start_index", None)
+                    image_token_length = gen_kwargs.pop("image_token_length", None)
+                    fastv_config = dict(fastv_k=fastv_k, fastv_r=fastv_r, image_token_start_index=image_token_start_index, image_token_length=image_token_length)
+                    gen_kwargs["fastv_config"] = fastv_config
 
             input_ids_list = [tokenizer_image_token(prompt, self.tokenizer, IMAGE_TOKEN_INDEX, return_tensors="pt") for prompt in question_input]
             pad_token_ids = self.tokenizer.pad_token_id if self.tokenizer.pad_token_id is not None else self.tokenizer.eos_token_id
