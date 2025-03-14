@@ -388,13 +388,13 @@ class Llava(lmms):
                 strategy = gen_kwargs.pop("strategy", None)
                 alpha = gen_kwargs.pop("alpha", None)
                 beta = gen_kwargs.pop("beta", None)
-                gen_kwargs["contrastive_decoding_config"] = ContrastiveDecodingConfig(strategy=strategy, alpha=alpha, beta=beta)
+                cd_config = ContrastiveDecodingConfig(strategy=strategy, alpha=alpha, beta=beta)
                 if strategy == "VCD":
                     noise_step = gen_kwargs.pop("noise_step", None)
                     from llava.utils import GaussianDiffusion
                     diffusion = GaussianDiffusion(device=self.device)
                     gen_kwargs["noisy_images"] = diffusion(image_tensor, noise_step)
-                    gen_kwargs["noise_step"] = noise_step
+                    cd_config.noise_step = noise_step
                 elif strategy == "SID":
                     # prepare `fastv_config` for SID
                     fastv_k = gen_kwargs.pop("fastv_k", None)
@@ -402,7 +402,10 @@ class Llava(lmms):
                     image_token_start_index = gen_kwargs.pop("image_token_start_index", None)
                     image_token_length = gen_kwargs.pop("image_token_length", None)
                     fastv_config = dict(fastv_k=fastv_k, fastv_r=fastv_r, image_token_start_index=image_token_start_index, image_token_length=image_token_length)
-                    gen_kwargs["fastv_config"] = fastv_config
+                    # add `fastv_config` to `contrastive_decoding_config` for SID
+                    cd_config.fastv_config = fastv_config
+                # setting `contrastive_decoding_config` in gen_kwargs
+                gen_kwargs["contrastive_decoding_config"] = cd_config
 
             input_ids_list = [tokenizer_image_token(prompt, self.tokenizer, IMAGE_TOKEN_INDEX, return_tensors="pt") for prompt in question_input]
             pad_token_ids = self.tokenizer.pad_token_id if self.tokenizer.pad_token_id is not None else self.tokenizer.eos_token_id
@@ -416,7 +419,7 @@ class Llava(lmms):
                     attention_mask=attention_masks,
                     pad_token_id=pad_token_ids,
                     images=image_tensor,
-                    noisy_images=gen_kwargs["noisy_images"],
+                    noisy_images=gen_kwargs.get("noisy_images", None),
                     image_sizes=gen_kwargs["image_sizes"],
                     do_sample=True if gen_kwargs["temperature"] > 0 else False,
                     temperature=gen_kwargs["temperature"],
@@ -424,7 +427,7 @@ class Llava(lmms):
                     num_beams=gen_kwargs["num_beams"],
                     max_new_tokens=gen_kwargs["max_new_tokens"],
                     use_cache=self.use_cache,
-                    contrastive_decoding_config=gen_kwargs["contrastive_decoding_config"],
+                    contrastive_decoding_config=gen_kwargs.get("contrastive_decoding_config", None),
                 )
                 text_outputs = self.tokenizer.batch_decode(cont, skip_special_tokens=True)
             except Exception as e:

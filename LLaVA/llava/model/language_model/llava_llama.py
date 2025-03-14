@@ -112,21 +112,28 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM):
         image_sizes: Optional[torch.Tensor] = None,
         **kwargs,
     ) -> Union[GenerateOutput, torch.LongTensor]:
-        position_ids = kwargs.pop("position_ids", None)
-        attention_mask = kwargs.pop("attention_mask", None)
+        _position_ids = kwargs.pop("position_ids", None)
+        _attention_mask = kwargs.pop("attention_mask", None)
         if "inputs_embeds" in kwargs:
             raise NotImplementedError("`inputs_embeds` is not supported")
 
         if images is not None:
-            inputs_embeds = self.prepare_inputs_labels_for_multimodal(
-                inputs,
+            (
+                _,
                 position_ids,
                 attention_mask,
+                _,
+                inputs_embeds,
+                _
+            ) = self.prepare_inputs_labels_for_multimodal(
+                inputs,
+                _position_ids,
+                _attention_mask,
                 None,
                 None,
                 images,
                 image_sizes=image_sizes
-            )[-2]
+            )
         else:
             inputs_embeds = self.get_model().embed_tokens(inputs)
         cd_inputs_embeds = None
@@ -141,8 +148,8 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM):
                 _
             ) = self.prepare_inputs_labels_for_multimodal(
                 inputs,
-                position_ids,
-                attention_mask,
+                _position_ids,
+                _attention_mask,
                 None,
                 None,
                 noisy_images,

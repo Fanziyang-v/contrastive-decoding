@@ -143,7 +143,7 @@ fastv_config = {
     "image_token_length": 576
 }
 
-cd_config = ContrastiveDecodingConfig(strategy="SID", alpha=1, beta=0.1, noise_step=499, fastv_config=fastv_config)
+cd_config = ContrastiveDecodingConfig(strategy="SID", alpha=1, beta=0.1, fastv_config=fastv_config)
 model_path = "liuhaotian/llava-v1.5-7b"
 prompt = "What are the things I should be cautious about when I visit here?"
 image_file = "https://llava-vl.github.io/static/images/view.jpg"

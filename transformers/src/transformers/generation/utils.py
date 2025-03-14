@@ -3055,6 +3055,11 @@ class GenerationMixin:
                 outputs, model_kwargs, is_encoder_decoder=self.config.is_encoder_decoder
             )
 
+            # SID: update model kwargs for next step
+            sid_model_kwargs = self._update_model_kwargs_for_generation(
+                sid_outputs, sid_model_kwargs, is_encoder_decoder=self.config.is_encoder_decoder
+            )
+
             # if eos_token was found in one sentence, set sentence to finished
             if eos_token_id_tensor is not None:
                 unfinished_sequences = unfinished_sequences.mul(
@@ -3977,6 +3982,11 @@ class GenerationMixin:
                 streamer.put(next_tokens.cpu())
             model_kwargs = self._update_model_kwargs_for_generation(
                 outputs, model_kwargs, is_encoder_decoder=self.config.is_encoder_decoder
+            )
+
+            # SID: update model kwargs for next step
+            sid_model_kwargs = self._update_model_kwargs_for_generation(
+                sid_outputs, sid_model_kwargs, is_encoder_decoder=self.config.is_encoder_decoder
             )
 
             # if eos_token was found in one sentence, set sentence to finished
